@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/net/html/charset"
 )
 
 func rateLimit(c *gin.Context) {
@@ -34,28 +35,40 @@ func index(c *gin.Context) {
 func roomGET(c *gin.Context) {
 	// Make the HTTP request
 	resp, err := http.Get("https://www.hkjc.com/")
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to fetch data",
-		})
-		return
-	}
-	defer resp.Body.Close()
-	
-	// Read the response body
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to read response body",
-		})
-		return
-	}
-	
-	// Return the response
-	c.JSON(http.StatusOK, gin.H{
-		"data": string(body),
-	})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "Failed to fetch data",
+			})
+			return
+		}
+		defer resp.Body.Close()
 
+		// Read the response body
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "Failed to read response body",
+			})
+			return
+		}
+
+		// Determine the character encoding
+		contentType := resp.Header.Get("Content-Type")
+		encoding, _, _ := charset.DetermineEncoding(body, contentType)
+
+		// Decode the response body using the appropriate character encoding
+		decodedBody, err := encoding.NewDecoder().Bytes(body)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "Failed to decode response body",
+			})
+			return
+		}
+
+		// Return the response
+		c.JSON(http.StatusOK, gin.H{
+			"data": string(decodedBody),
+		})
 }
 
 func roomPOST(c *gin.Context) {
