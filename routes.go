@@ -52,11 +52,11 @@ func roomGET(c *gin.Context) {
 			return
 		}
 
-		// Unquote the Unicode escape sequences
-		unquotedBody, err := strconv.Unquote(`"` + string(body) + `"`)
+		// Convert Unicode escape sequences to UTF-8
+		unquotedBody, err := strconv.Unquote(strings.Replace(strconv.QuoteToASCII(string(body)), `\\u`, `\u`, -1))
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": "Failed to unquote Unicode escape sequences",
+				"error": "Failed to convert Unicode escape sequences to UTF-8",
 			})
 			return
 		}
