@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
@@ -31,18 +32,28 @@ func index(c *gin.Context) {
 }
 
 func roomGET(c *gin.Context) {
-	roomid := c.Param("roomid")
-	nick := c.Query("nick")
-	if len(nick) < 2 {
-		nick = ""
+	// Make the HTTP request
+	resp, err := http.Get("https://api.example.com/data")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to fetch data",
+		})
+		return
 	}
-	if len(nick) > 13 {
-		nick = nick[0:12] + "..."
+	defer resp.Body.Close()
+	
+	// Read the response body
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to read response body",
+		})
+		return
 	}
-	c.HTML(http.StatusOK, "room_login.templ.html", gin.H{
-		"roomid":    roomid,
-		"nick":      nick,
-		"timestamp": time.Now().Unix(),
+	
+	// Return the response
+	c.JSON(http.StatusOK, gin.H{
+		"data": string(body),
 	})
 
 }
