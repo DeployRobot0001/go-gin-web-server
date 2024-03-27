@@ -33,7 +33,7 @@ func index(c *gin.Context) {
 
 func roomGET(c *gin.Context) {
 	// Make the HTTP request
-	resp, err := http.Get("https://api.example.com/data")
+	resp, err := http.Get("https://www.hkjc.com/")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to fetch data",
